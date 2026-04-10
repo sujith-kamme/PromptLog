@@ -295,6 +295,117 @@ def rescore_cmd(
 
 
 # ---------------------------------------------------------------------------
+# promptlog export
+# ---------------------------------------------------------------------------
+
+
+@app.command("export")
+@click.option("--project", required=True, help="Project name")
+@click.option(
+    "--format", "fmt",
+    type=click.Choice(["csv", "json"]),
+    default="csv",
+    show_default=True,
+    help="Output format",
+)
+@click.option("--output", "output_path", default=None, help="File path to write (default: stdout)")
+def export_cmd(project: str, fmt: str, output_path: Optional[str]) -> None:
+    """Export all runs for a project to CSV or JSON."""
+    db_path = _resolve_storage_path(project, None)
+    if not db_path.exists():
+        console.print(f"[red]No database found for project '{project}'.[/red]")
+        raise SystemExit(1)
+
+    runs = store.get_runs(db_path, project=project)
+    if not runs:
+        console.print("[dim]No runs found.[/dim]")
+        return
+
+    rows = [r.summary() for r in runs]
+
+    dest = open(output_path, "w", newline="") if output_path else sys.stdout
+
+    try:
+        if fmt == "csv":
+            writer = csv.DictWriter(dest, fieldnames=rows[0].keys())
+            writer.writeheader()
+            writer.writerows(rows)
+        else:
+            json.dump(rows, dest, indent=2, default=str)
+            dest.write("\n")
+    finally:
+        if output_path:
+            dest.close()
+
+    if output_path:
+        console.print(f"[green]✓ Exported {len(rows)} runs to {output_path}[/green]")
+
+
+# ---------------------------------------------------------------------------
+# promptlog projects
+# ---------------------------------------------------------------------------
+
+
+@app.command("projects")
+def projects_cmd() -> None:
+    """List all known projects."""
+    storage_dir = Path.home() / ".promptlog"
+    db_files = sorted(storage_dir.glob("*.db")) if storage_dir.exists() else []
+
+    if not db_files:
+        console.print("[dim]No projects found in ~/.promptlog/[/dim]")
+        return
+
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("project", style="cyan")
+    table.add_column("runs", justify="right")
+    table.add_column("db_path", style="dim")
+
+    for db_file in db_files:
+        project_name = db_file.stem
+        runs = store.get_runs(db_file, project=project_name)
+        table.add_row(project_name, str(len(runs)), str(db_file))
+
+    console.print(table)
+
+
+# ---------------------------------------------------------------------------
+# promptlog delete
+# ---------------------------------------------------------------------------
+
+
+@app.command("delete")
+@click.argument("run_id")
+@click.option("--project", required=True, help="Project name")
+@click.option("--yes", "-y", is_flag=True, default=False, help="Skip confirmation prompt")
+def delete_cmd(run_id: str, project: str, yes: bool) -> None:
+    """Delete a specific run."""
+    db_path = _resolve_storage_path(project, None)
+    if not db_path.exists():
+        console.print(f"[red]No database found for project '{project}'.[/red]")
+        raise SystemExit(1)
+
+    run = store.get_run(db_path, run_id)
+    if run is None:
+        console.print(f"[red]Run '{run_id}' not found.[/red]")
+        raise SystemExit(1)
+
+    if not yes:
+        console.print(
+            f"[yellow]Delete run '{run_id}' (task: {run.name}, "
+            f"{run.timestamp.strftime('%Y-%m-%d %H:%M:%S')})? [y/n][/yellow]",
+            end=" ",
+        )
+        answer = input().strip().lower()
+        if answer != "y":
+            console.print("[dim]Cancelled.[/dim]")
+            return
+
+    store.delete_run(db_path, run_id)
+    console.print(f"[green]✓ Deleted {run_id}[/green]")
+
+
+# ---------------------------------------------------------------------------
 # promptlog review
 # ---------------------------------------------------------------------------
 
