@@ -124,6 +124,12 @@ def get_runs(
     return [_row_to_run(r) for r in rows]
 
 
+def delete_run(db_path: Path, run_id: str) -> None:
+    """Delete a single run by run_id."""
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("DELETE FROM runs WHERE run_id = ?", (run_id,))
+
+
 def get_summary(db_path: Path, project: str) -> list[dict]:
     """
     Aggregate stats per (name, version) group.

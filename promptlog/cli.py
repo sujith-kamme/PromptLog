@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+import csv
+import json
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 import click
-from rich.console import Console
+from rich.console import Console, Group
 from rich.table import Table
+from rich.panel import Panel
+from rich.markdown import Markdown
+from rich import box
 
 from promptlog.config import _resolve_storage_path
 from promptlog.schema import FeedbackResult
@@ -26,40 +32,28 @@ def app() -> None:
 
 
 # ---------------------------------------------------------------------------
-# promptlog runs
+# promptlog ls
 # ---------------------------------------------------------------------------
 
 
-@app.command("runs")
+@app.command("ls")
 @click.option("--project", required=True, help="Project name")
-@click.option("--name", default=None, help="Filter by function/agent name")
+@click.option("--name", default=None, help="Filter by function/task name")
 @click.option("--unscored", is_flag=True, default=False, help="Show only unscored runs")
 @click.option("--failed", is_flag=True, default=False, help="Show only failed runs (with errors)")
 @click.option("--last", "last_n", type=int, default=None, help="Show last N runs")
-@click.option("--id", "run_id", default=None, help="Show full detail for one run")
-@click.option("--summary", is_flag=True, default=False, help="Aggregated stats per agent + version")
-def runs_cmd(
+def ls_cmd(
     project: str,
     name: Optional[str],
     unscored: bool,
     failed: bool,
     last_n: Optional[int],
-    run_id: Optional[str],
-    summary: bool,
 ) -> None:
-    """View logged runs for a project."""
+    """List logged runs for a project."""
     db_path = _resolve_storage_path(project, None)
     if not db_path.exists():
         console.print(f"[red]No database found for project '{project}'.[/red]")
         raise SystemExit(1)
-
-    if run_id:
-        _show_run_detail(db_path, run_id)
-        return
-
-    if summary:
-        _show_summary(db_path, project)
-        return
 
     runs = store.get_runs(
         db_path,
@@ -79,6 +73,7 @@ def runs_cmd(
     table.add_column("name")
     table.add_column("model", style="dim")
     table.add_column("temp", style="dim", justify="right")
+    table.add_column("prompt", max_width=40)
     table.add_column("output", max_width=60)
     table.add_column("scored", justify="center")
     table.add_column("passed", justify="center")
@@ -97,11 +92,16 @@ def runs_cmd(
         else:
             passed_str = "[dim]-[/dim]"
 
+        prompt_preview = "-"
+        if run.prompt:
+            prompt_preview = run.prompt[:40] + ("..." if len(run.prompt) > 40 else "")
+
         table.add_row(
             run.run_id,
             run.name,
             run.config.model or "-",
             str(run.config.temperature) if run.config.temperature is not None else "-",
+            prompt_preview,
             output_preview,
             scored_str,
             passed_str,
@@ -111,43 +111,83 @@ def runs_cmd(
     console.print(table)
 
 
+# ---------------------------------------------------------------------------
+# promptlog view
+# ---------------------------------------------------------------------------
+
+
+@app.command("view")
+@click.argument("run_id")
+@click.option("--project", required=True, help="Project name")
+def view_cmd(run_id: str, project: str) -> None:
+    """View full detail for a specific run."""
+    db_path = _resolve_storage_path(project, None)
+    if not db_path.exists():
+        console.print(f"[red]No database found for project '{project}'.[/red]")
+        raise SystemExit(1)
+    _show_run_detail(db_path, run_id)
+
+
 def _show_run_detail(db_path: Path, run_id: str) -> None:
     run = store.get_run(db_path, run_id)
     if run is None:
         console.print(f"[red]Run '{run_id}' not found.[/red]")
         raise SystemExit(1)
 
-    console.rule()
-    console.print(f"[bold]run_id[/bold]      : {run.run_id}")
-    console.print(f"[bold]name[/bold]        : {run.name}")
-    console.print(f"[bold]project[/bold]     : {run.project}")
-    console.rule()
-    console.print("[bold]config:[/bold]")
-    console.print(f"  model       : {run.config.model or '-'}")
-    console.print(f"  temperature : {run.config.temperature if run.config.temperature is not None else '-'}")
-    console.print(f"  version     : {run.config.version or '-'}")
-    if run.config.tags:
-        console.print(f"  tags        : {run.config.tags}")
-    console.rule()
-    console.print("[bold]prompt:[/bold]")
-    console.print(f"  {run.prompt or '[dim](none)[/dim]'}")
-    console.rule()
-    console.print("[bold]output:[/bold]")
-    console.print(f"  {run.output or '[dim](none)[/dim]'}")
-    console.rule()
-    console.print("[bold]meta:[/bold]")
-    console.print(f"  latency_ms  : {run.latency_ms:.1f}" if run.latency_ms is not None else "  latency_ms  : -")
-    console.print(f"  timestamp   : {run.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
-    console.print(f"  error       : {run.error or 'None'}")
+    details = f"Task     : {run.name:<21} Project : {run.project}\n"
+    details += f"Model    : {run.config.model or '-':<21} Temp    : {run.config.temperature if run.config.temperature is not None else '-':<9}"
+    if run.latency_ms is not None:
+        details += f" Latency : {run.latency_ms:.1f}ms"
+    if run.config.version:
+        details += f"\nVersion  : {run.config.version}"
+
+    table = Table(box=box.ROUNDED, show_header=True, header_style="bold", show_lines=True, width=100)
+    table.add_column(f"Run Profile: {run.run_id}", no_wrap=False)
+
+    table.add_row(details)
+
+    prompt_str = run.prompt or "[dim](none)[/dim]"
+    table.add_row(f"[bold cyan]Prompt[/bold cyan]\n{prompt_str}")
+
+    if run.error:
+        table.add_row(f"[bold red]Error[/bold red]\n{run.error}")
+    else:
+        table.add_row(Group("[bold green]Output[/bold green]", Markdown(run.output or "(none)")))
+
     if run.feedback:
-        console.rule()
-        console.print("[bold]feedback:[/bold]")
-        console.print(f"  score       : {run.feedback.score if run.feedback.score is not None else '-'}")
-        console.print(f"  label       : {run.feedback.label or '-'}")
-        console.print(f"  notes       : {run.feedback.notes or '-'}")
-        given_at = run.feedback.feedback_given_at
-        console.print(f"  given_at    : {given_at.strftime('%Y-%m-%d %H:%M:%S') if given_at else '-'}")
-    console.rule()
+        fb = run.feedback
+
+        display_label = fb.label
+        if not display_label:
+            if run.passed is True:
+                display_label = "PASS"
+            elif run.passed is False:
+                display_label = "FAIL"
+            else:
+                display_label = "-"
+
+        fb_text = f"Status   : {display_label} [{fb.score if fb.score is not None else '-'}]"
+        if fb.notes:
+            fb_text += f"\nNotes    : {fb.notes}"
+        table.add_row(Group("[bold yellow]Feedback[/bold yellow]", fb_text))
+
+    console.print(table)
+
+
+# ---------------------------------------------------------------------------
+# promptlog stats
+# ---------------------------------------------------------------------------
+
+
+@app.command("stats")
+@click.option("--project", required=True, help="Project name")
+def stats_cmd(project: str) -> None:
+    """View aggregated pass rates and average scores per task."""
+    db_path = _resolve_storage_path(project, None)
+    if not db_path.exists():
+        console.print(f"[red]No database found for project '{project}'.[/red]")
+        raise SystemExit(1)
+    _show_summary(db_path, project)
 
 
 def _show_summary(db_path: Path, project: str) -> None:
@@ -181,11 +221,11 @@ def _show_summary(db_path: Path, project: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# promptlog feedback
+# promptlog rescore
 # ---------------------------------------------------------------------------
 
 
-@app.command("feedback")
+@app.command("rescore")
 @click.argument("run_id")
 @click.option("--project", required=True, help="Project name")
 @click.option("--pass", "pass_flag", is_flag=True, default=False, help="Mark as PASS (score=1.0)")
@@ -193,7 +233,7 @@ def _show_summary(db_path: Path, project: str) -> None:
 @click.option("--score", type=float, default=None, help="Numeric score 0.0–1.0")
 @click.option("--label", default=None, help="Label e.g. PASS FAIL PARTIAL")
 @click.option("--notes", default=None, help="Free-text notes")
-def feedback_cmd(
+def rescore_cmd(
     run_id: str,
     project: str,
     pass_flag: bool,
@@ -202,7 +242,7 @@ def feedback_cmd(
     label: Optional[str],
     notes: Optional[str],
 ) -> None:
-    """Give feedback on a specific run."""
+    """Manually score or update feedback for a specific run."""
     db_path = _resolve_storage_path(project, None)
     if not db_path.exists():
         console.print(f"[red]No database found for project '{project}'.[/red]")
@@ -227,7 +267,6 @@ def feedback_cmd(
             console.print("[dim]Skipped.[/dim]")
             return
 
-    # Resolve label from shorthand flags
     resolved_label = label
     resolved_score = score
     if pass_flag:
@@ -268,8 +307,25 @@ def review_cmd(project: str) -> None:
     if not db_path.exists():
         console.print(f"[red]No database found for project '{project}'.[/red]")
         raise SystemExit(1)
+    run_interactive_review(db_path, project)
 
+
+def run_interactive_review(
+    db_path: Path,
+    project: str,
+    session_run_ids: Optional[list[str]] = None,
+    compact: bool = False,
+) -> None:
+    """Core interactive review loop. Called by review_cmd and the atexit handler.
+
+    session_run_ids: when provided (atexit path), only review runs from this session.
+    compact: when True, skip panels and show a single inline prompt line instead.
+    """
     unscored = store.get_runs(db_path, project=project, unscored_only=True)
+
+    if session_run_ids is not None:
+        session_set = set(session_run_ids)
+        unscored = [r for r in unscored if r.run_id in session_set]
 
     if not unscored:
         console.print("[dim]No unscored runs. Nothing to review.[/dim]")
@@ -279,21 +335,45 @@ def review_cmd(project: str) -> None:
     scored_count = 0
 
     for i, run in enumerate(unscored, 1):
-        console.rule(f"[bold]{i} / {total}[/bold]")
-        console.print(f"[cyan]run_id[/cyan]  : {run.run_id}")
-        console.print(f"[cyan]agent[/cyan]   : {run.name}")
-        model_str = run.config.model or "-"
-        temp_str = str(run.config.temperature) if run.config.temperature is not None else "-"
-        version_str = run.config.version or "-"
-        console.print(f"[cyan]model[/cyan]   : {model_str}  temp: {temp_str}  version: {version_str}")
-        console.print()
-        console.print(f"[cyan]prompt[/cyan]  : {run.prompt or '[dim](none)[/dim]'}")
-        console.print()
-        console.print(f"[cyan]output[/cyan]  : {run.output or '[dim](none)[/dim]'}")
-        if run.error:
-            console.print(f"[red]error[/red]   : {run.error}")
-        console.print()
-        console.print("[bold][[p] pass  [f] fail  [s] score  [n] skip  [q] quit][/bold]")
+        if compact:
+            console.print(
+                f"\nRate output task [bold cyan]\"{run.name}\"[/bold cyan]:\n"
+                f"> [bold][ (p)ass | (f)ail | (s)core | (n)skip | (q)uit ][/bold]",
+                end=" ",
+            )
+        else:
+            console.rule(f"[bold dim]{i} / {total}[/bold dim]")
+
+            prompt_panel = Panel(
+                run.prompt or "(none)",
+                title="[bold cyan]Prompt[/bold cyan]",
+                title_align="left",
+                border_style="cyan",
+                subtitle=f"[dim]id: {run.run_id} | task: {run.name}[/dim]",
+                subtitle_align="right",
+            )
+            console.print(prompt_panel)
+
+            if run.error:
+                console.print(Panel(
+                    str(run.error),
+                    title="[bold red]Error[/bold red]",
+                    title_align="left",
+                    border_style="red",
+                ))
+            else:
+                model_str = run.config.model or "unknown"
+                temp_str = str(run.config.temperature) if run.config.temperature is not None else "-"
+                console.print(Panel(
+                    Markdown(run.output or "(none)"),
+                    title="[bold green]Output[/bold green]",
+                    title_align="left",
+                    border_style="green",
+                    subtitle=f"[dim]{model_str} | temp: {temp_str}[/dim]",
+                    subtitle_align="right",
+                ))
+
+            console.print("[bold][[p] pass  [f] fail  [s] score  [n] skip  [q] quit][/bold]")
 
         while True:
             choice = click.prompt(">", default="n", prompt_suffix=" ").strip().lower()

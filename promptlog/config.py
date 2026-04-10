@@ -1,6 +1,7 @@
 # promptlog/config.py
 
 from __future__ import annotations
+import atexit
 from dataclasses import dataclass, field
 from typing import Optional, Literal
 from pathlib import Path
@@ -91,7 +92,18 @@ def init(
         enabled=enabled,
     )
 
+    if feedback_mode == "end":
+        atexit.register(_trigger_review, resolved_path, project)
+
     return _config
+
+
+def _trigger_review(storage_path: Path, project: str) -> None:
+    """atexit handler — launches interactive review when the script exits."""
+    from promptlog.cli import run_interactive_review
+    from promptlog.tracker import _session_run_ids
+    compact = len(_session_run_ids) == 1
+    run_interactive_review(storage_path, project, session_run_ids=list(_session_run_ids), compact=compact)
 
 
 def get_config() -> PromptLogConfig:

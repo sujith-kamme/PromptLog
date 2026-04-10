@@ -28,6 +28,9 @@ _current_run_state: ContextVar[Optional[_RunState]] = ContextVar(
     "_current_run_state", default=None
 )
 
+# Collects run_ids created during this Python process — used by atexit smart review
+_session_run_ids: list[str] = []
+
 
 # ---------------------------------------------------------------------------
 # Public decorator
@@ -127,6 +130,7 @@ def track(
                     error=error_str,
                 )
                 store.insert_run(cfg.storage_path, run)
+                _session_run_ids.append(run.run_id)
                 _current_run_state.reset(token)
 
         return wrapper
