@@ -63,3 +63,4 @@ select = ["E", "F", "I"]        # errors, pyflakes, isort
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
