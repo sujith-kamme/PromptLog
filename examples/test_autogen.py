@@ -39,7 +39,11 @@ critic = AssistantAgent(
     system_message="You are a critic. Review the writer's answer and suggest one improvement.",
 )
 
-user_proxy = UserProxyAgent(name="user_proxy")
+user_proxy = AssistantAgent(
+    name="user_proxy",
+    model_client=model_client,
+    system_message="You are the user who initiated the request. Observe the writer and critic and let them finish their work.",
+)
 
 TASK = "What is the capital of France and why is it significant?"
 
