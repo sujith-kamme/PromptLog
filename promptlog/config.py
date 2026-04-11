@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import atexit
+import uuid
 from dataclasses import dataclass, field
 from typing import Optional, Literal
 from pathlib import Path
@@ -30,6 +31,7 @@ class PromptLogConfig:
 
     project: str                                    # required — groups all runs together
     storage_path: Path                              # where SQLite DB lives
+    session_id: str = field(default_factory=lambda: uuid.uuid4().hex[:8])  # unique per pl.init() call
     feedback_mode: FeedbackMode = "none"            # when to ask for feedback
     default_model: Optional[str] = None             # fallback if not set in @pl.track
     default_temperature: Optional[float] = None     # fallback if not set in @pl.track
@@ -102,8 +104,7 @@ def _trigger_review(storage_path: Path, project: str) -> None:
     """atexit handler — launches interactive review when the script exits."""
     from promptlog.cli import run_interactive_review
     from promptlog.tracker import _session_run_ids
-    compact = len(_session_run_ids) == 1
-    run_interactive_review(storage_path, project, session_run_ids=list(_session_run_ids), compact=compact)
+    run_interactive_review(storage_path, project, session_run_ids=list(_session_run_ids), compact=True)
 
 
 def get_config() -> PromptLogConfig:

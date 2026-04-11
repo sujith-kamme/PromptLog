@@ -72,6 +72,8 @@ class Run(BaseModel):
     """
  
     run_id: str = Field(default_factory=_generate_run_id)
+    session_id: Optional[str] = None        # groups runs from the same script execution
+    parent_run_id: Optional[str] = None     # set when this run is called inside another @pl.track
     name: str                               # agent / function name
     project: str
  
@@ -124,6 +126,8 @@ class Run(BaseModel):
         """
         return {
             "run_id":             self.run_id,
+            "session_id":         self.session_id,
+            "parent_run_id":      self.parent_run_id,
             "name":               self.name,
             "project":            self.project,
             "model":              self.config.model,

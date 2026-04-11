@@ -68,22 +68,42 @@ def ls_cmd(
         console.print("[dim]No runs found.[/dim]")
         return
 
-    table = Table(show_header=True, header_style="bold")
+    from collections import defaultdict
+
+    runs_asc = list(reversed(runs))  # oldest-first for tree ordering
+
+    by_id = {r.run_id: r for r in runs_asc}
+    children: dict[str, list] = defaultdict(list)
+    roots = []
+    for run in runs_asc:
+        if run.parent_run_id and run.parent_run_id in by_id:
+            children[run.parent_run_id].append(run)
+        else:
+            roots.append(run)
+
+    tree_rows = []
+
+    def _render(run, prefix="", depth=0):
+        tree_rows.append((run, prefix + run.name))
+        kids = children[run.run_id]
+        child_prefix = "  " if depth == 0 else prefix.replace("├─ ", "│  ").replace("└─ ", "   ")
+        for i, kid in enumerate(kids):
+            is_last = i == len(kids) - 1
+            connector = "└─ " if is_last else "├─ "
+            _render(kid, child_prefix + connector, depth + 1)
+
+    for root in roots:
+        _render(root)
+
+    table = Table(show_header=True, header_style="bold", show_lines=False)
     table.add_column("run_id", style="cyan", no_wrap=True)
-    table.add_column("name")
-    table.add_column("model", style="dim")
-    table.add_column("temp", style="dim", justify="right")
-    table.add_column("prompt", max_width=40)
-    table.add_column("output", max_width=60)
-    table.add_column("scored", justify="center")
-    table.add_column("passed", justify="center")
-    table.add_column("timestamp", style="dim")
+    table.add_column("name", no_wrap=True)
+    table.add_column("model", style="dim", no_wrap=True)
+    table.add_column("ms", style="dim", justify="right", no_wrap=True)
+    table.add_column("scored", justify="center", no_wrap=True)
+    table.add_column("passed", justify="center", no_wrap=True)
 
-    for run in runs:
-        output_preview = ""
-        if run.output:
-            output_preview = run.output[:60] + ("..." if len(run.output) > 60 else "")
-
+    for run, display_name in tree_rows:
         scored_str = "[green]yes[/green]" if run.is_scored else "[dim]no[/dim]"
         if run.passed is True:
             passed_str = "[green]PASS[/green]"
@@ -92,20 +112,15 @@ def ls_cmd(
         else:
             passed_str = "[dim]-[/dim]"
 
-        prompt_preview = "-"
-        if run.prompt:
-            prompt_preview = run.prompt[:40] + ("..." if len(run.prompt) > 40 else "")
+        latency_str = f"{run.latency_ms:.0f}" if run.latency_ms is not None else "-"
 
         table.add_row(
             run.run_id,
-            run.name,
+            display_name,
             run.config.model or "-",
-            str(run.config.temperature) if run.config.temperature is not None else "-",
-            prompt_preview,
-            output_preview,
+            latency_str,
             scored_str,
             passed_str,
-            run.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
         )
 
     console.print(table)

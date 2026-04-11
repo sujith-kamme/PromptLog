@@ -50,12 +50,18 @@ def critique_agent(explanation: str) -> str:
     return critique_chain.invoke({"explanation": explanation})
 
 
+@pl.track()
+def run_pipeline(topic: str) -> dict:
+    summary = summarize_agent(topic)
+    critique = critique_agent(summary)
+    return {
+        "summary": summary,
+        "critique": critique
+    }
+
+
 if __name__ == "__main__":
     topic = "the French Revolution"
-
-    summary = summarize_agent(topic)
-    print(f"[summarize_agent]\n{summary}\n")
-
-    critique = critique_agent(summary)
-    print(f"[critique_agent]\n{critique}\n")
+    result = run_pipeline(topic)
+    print(result)
     print()

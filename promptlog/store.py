@@ -31,6 +31,8 @@ def init_db(db_path: Path) -> None:
             """
             CREATE TABLE IF NOT EXISTS runs (
                 run_id        TEXT PRIMARY KEY,
+                session_id    TEXT,
+                parent_run_id TEXT,
                 name          TEXT NOT NULL,
                 project       TEXT NOT NULL,
                 prompt        TEXT,
@@ -43,6 +45,12 @@ def init_db(db_path: Path) -> None:
             )
             """
         )
+        # Migration: add columns to existing DBs that predate them
+        existing = {row[1] for row in conn.execute("PRAGMA table_info(runs)").fetchall()}
+        if "session_id" not in existing:
+            conn.execute("ALTER TABLE runs ADD COLUMN session_id TEXT")
+        if "parent_run_id" not in existing:
+            conn.execute("ALTER TABLE runs ADD COLUMN parent_run_id TEXT")
     _initialized_dbs.add(db_path)
 
 
@@ -52,12 +60,14 @@ def insert_run(db_path: Path, run: Run) -> None:
         conn.execute(
             """
             INSERT INTO runs
-                (run_id, name, project, prompt, output, config_json,
+                (run_id, session_id, parent_run_id, name, project, prompt, output, config_json,
                  latency_ms, feedback_json, timestamp, error)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 run.run_id,
+                run.session_id,
+                run.parent_run_id,
                 run.name,
                 run.project,
                 run.prompt,
@@ -82,6 +92,7 @@ def update_feedback(db_path: Path, run_id: str, feedback: FeedbackResult) -> Non
 
 def get_run(db_path: Path, run_id: str) -> Optional[Run]:
     """Fetch a single run by run_id. Returns None if not found."""
+    init_db(db_path)
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
@@ -99,6 +110,7 @@ def get_runs(
     last_n: Optional[int] = None,
 ) -> list[Run]:
     """Query runs with optional filters."""
+    init_db(db_path)
     conditions = ["project = ?"]
     params: list = [project]
 
@@ -175,6 +187,8 @@ def get_summary(db_path: Path, project: str) -> list[dict]:
 def _row_to_run(row: sqlite3.Row) -> Run:
     return Run(
         run_id=row["run_id"],
+        session_id=row["session_id"],
+        parent_run_id=row["parent_run_id"],
         name=row["name"],
         project=row["project"],
         prompt=row["prompt"],

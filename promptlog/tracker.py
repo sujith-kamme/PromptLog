@@ -8,7 +8,7 @@ from functools import wraps
 from typing import Callable, Optional
 
 from promptlog.config import PromptLogConfig, get_config
-from promptlog.schema import FeedbackResult, PromptConfig, Run
+from promptlog.schema import FeedbackResult, PromptConfig, Run, _generate_run_id
 from promptlog import store
 
 
@@ -27,6 +27,9 @@ class _RunState:
 _current_run_state: ContextVar[Optional[_RunState]] = ContextVar(
     "_current_run_state", default=None
 )
+
+# Tracks the currently executing run_id for automatic parent_run_id detection
+_active_run_id: ContextVar[Optional[str]] = ContextVar("_active_run_id", default=None)
 
 # Collects run_ids created during this Python process — used by atexit smart review
 _session_run_ids: list[str] = []
@@ -96,9 +99,16 @@ def track(
             # Ensure DB is ready
             store.init_db(cfg.storage_path)
 
+            # Detect parent run (set if this call is nested inside another @pl.track)
+            parent_run_id = _active_run_id.get()
+
+            # Generate run_id upfront so child runs can reference it as their parent
+            new_run_id = _generate_run_id()
+            active_token = _active_run_id.set(new_run_id)
+
             # Set up per-call state in ContextVar
             state = _RunState()
-            token = _current_run_state.set(state)
+            state_token = _current_run_state.set(state)
 
             start_ms = time.monotonic() * 1000
             error_str: Optional[str] = None
@@ -119,7 +129,10 @@ def track(
                     captured_prompt = _extract_prompt_from_args(args, kwargs)
 
                 run = Run(
+                    run_id=new_run_id,
                     name=resolved_name,
+                    session_id=cfg.session_id,
+                    parent_run_id=parent_run_id,
                     project=cfg.project,
                     prompt=captured_prompt,
                     output=str(result) if result is not None else None,
@@ -131,7 +144,8 @@ def track(
                 )
                 store.insert_run(cfg.storage_path, run)
                 _session_run_ids.append(run.run_id)
-                _current_run_state.reset(token)
+                _current_run_state.reset(state_token)
+                _active_run_id.reset(active_token)
 
         return wrapper
 
