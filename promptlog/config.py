@@ -146,12 +146,19 @@ def _resolve_storage_path(project: str, storage_path: Optional[str]) -> Path:
 
     Priority:
     1. Explicit path passed to pl.init()
-    2. Default: ~/.promptlog/<project>.db
+    2. Local: ./.promptlog/<project>.db (if ./.promptlog/ exists)
+    3. Global: ~/.promptlog/<project>.db
     """
     if storage_path:
         path = Path(storage_path)
     else:
-        path = Path.home() / ".promptlog" / f"{project}.db"
+        # Check for local .promptlog folder
+        local_dir = Path.cwd() / ".promptlog"
+        if local_dir.exists() and local_dir.is_dir():
+            path = local_dir / f"{project}.db"
+        else:
+            # Fallback to global home directory
+            path = Path.home() / ".promptlog" / f"{project}.db"
 
     # ensure parent directory exists
     path.parent.mkdir(parents=True, exist_ok=True)

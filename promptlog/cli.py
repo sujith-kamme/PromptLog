@@ -364,12 +364,22 @@ def export_cmd(project: str, fmt: str, output_path: Optional[str]) -> None:
 @app.command("projects")
 def projects_cmd() -> None:
     """List all known projects."""
-    storage_dir = Path.home() / ".promptlog"
-    db_files = sorted(storage_dir.glob("*.db")) if storage_dir.exists() else []
+    global_dir = Path.home() / ".promptlog"
+    local_dir = Path.cwd() / ".promptlog"
 
-    if not db_files:
-        console.print("[dim]No projects found in ~/.promptlog/[/dim]")
+    db_paths = []
+    if global_dir.exists():
+        db_paths.extend(global_dir.glob("*.db"))
+    
+    # Also scan local folder if it exists and isn't the same as global
+    if local_dir.exists() and local_dir.resolve() != global_dir.resolve():
+        db_paths.extend(local_dir.glob("*.db"))
+
+    if not db_paths:
+        console.print("[dim]No projects found in ~/.promptlog/ or ./.promptlog/[/dim]")
         return
+
+    db_files = sorted(list(set(db_paths)), key=lambda p: p.name)
 
     table = Table(show_header=True, header_style="bold")
     table.add_column("project", style="cyan")
