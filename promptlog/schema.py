@@ -51,7 +51,7 @@ class FeedbackResult(BaseModel):
     """
     Human feedback attached to a run after reviewing the output.
     Nothing here is automatic — a human always sets this explicitly
-    via CLI (promptlog feedback) or programmatically (pl.log_feedback()).
+    via CLI (promptlog review).
     """
  
     score: Optional[float] = None           # 0.0 to 1.0

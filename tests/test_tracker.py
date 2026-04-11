@@ -321,47 +321,6 @@ def test_log_prompt_overrides_auto_capture(initialized):
     assert runs[0].prompt == "explicit prompt"
 
 
-# ---------------------------------------------------------------------------
-# log_feedback
-# ---------------------------------------------------------------------------
-
-
-def test_log_feedback_captured(initialized):
-    @pl.track()
-    def func(expected: str) -> str:
-        result = "POSITIVE"
-        pl.log_feedback(
-            score=1.0 if result == expected else 0.0,
-            label="PASS" if result == expected else "FAIL",
-        )
-        return result
-
-    func("POSITIVE")
-
-    runs = store.get_runs(initialized.storage_path, project="test_proj")
-    assert runs[0].feedback is not None
-    assert runs[0].feedback.score == 1.0
-    assert runs[0].feedback.label == "PASS"
-
-
-def test_log_feedback_outside_track_raises():
-    with pytest.raises(RuntimeError, match="outside a @pl.track"):
-        pl.log_feedback(score=1.0, label="PASS")
-
-
-def test_log_feedback_with_expected_got(initialized):
-    @pl.track()
-    def func() -> str:
-        pl.log_feedback(score=0.0, label="FAIL", expected="POSITIVE", got="NEGATIVE")
-        return "NEGATIVE"
-
-    func()
-
-    runs = store.get_runs(initialized.storage_path, project="test_proj")
-    fb = runs[0].feedback
-    assert fb is not None
-    assert "expected: POSITIVE" in fb.notes
-    assert "got: NEGATIVE" in fb.notes
 
 
 # ---------------------------------------------------------------------------

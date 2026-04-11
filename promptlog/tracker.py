@@ -20,8 +20,6 @@ from promptlog import store
 @dataclass
 class _RunState:
     prompt: Optional[str] = None
-    feedback: Optional[FeedbackResult] = None
-    feedback_saved: bool = False
 
 
 _current_run_state: ContextVar[Optional[_RunState]] = ContextVar(
@@ -138,7 +136,6 @@ def track(
                     output=str(result) if result is not None else None,
                     config=resolved_config,
                     latency_ms=latency,
-                    feedback=state.feedback if state.feedback_saved else None,
                     timestamp=datetime.utcnow(),
                     error=error_str,
                 )
@@ -170,44 +167,6 @@ def log_prompt(prompt: str) -> None:
     state.prompt = prompt
 
 
-def log_feedback(
-    score: Optional[float] = None,
-    label: Optional[str] = None,
-    notes: Optional[str] = None,
-    expected: Optional[str] = None,
-    got: Optional[str] = None,
-) -> None:
-    """
-    Record programmatic feedback for the current tracked run.
-    Call this inside a @pl.track decorated function.
-
-    Feedback is embedded in the Run when it is saved after the function returns.
-    """
-    state = _current_run_state.get()
-    if state is None:
-        raise RuntimeError(
-            "log_feedback() called outside a @pl.track decorated function."
-        )
-
-    # Build notes from expected/got if passed
-    final_notes = notes
-    if expected is not None or got is not None:
-        parts = []
-        if expected is not None:
-            parts.append(f"expected: {expected}")
-        if got is not None:
-            parts.append(f"got: {got}")
-        if notes:
-            parts.append(notes)
-        final_notes = " | ".join(parts)
-
-    state.feedback = FeedbackResult(
-        score=score,
-        label=label,
-        notes=final_notes,
-        feedback_given_at=datetime.utcnow(),
-    )
-    state.feedback_saved = True
 
 
 # ---------------------------------------------------------------------------
