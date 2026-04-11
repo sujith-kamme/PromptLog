@@ -38,26 +38,25 @@ summarize_chain = summarize_template | summarize_model | StrOutputParser()
 critique_chain = critique_template | critique_model | StrOutputParser()
 
 
-@pl.track(model=MODEL, temperature=SUMMARIZE_TEMPERATURE)
-def summarize_agent(topic: str) -> str:
-    pl.log_prompt(summarize_template.format(topic=topic))
-    return summarize_chain.invoke({"topic": topic})
-
-
-@pl.track(model=MODEL, temperature=CRITIQUE_TEMPERATURE)
-def critique_agent(explanation: str) -> str:
-    pl.log_prompt(critique_template.format(explanation=explanation))
-    return critique_chain.invoke({"explanation": explanation})
-
-
 @pl.track()
 def run_pipeline(topic: str) -> dict:
-    summary = summarize_agent(topic)
-    critique = critique_agent(summary)
-    return {
-        "summary": summary,
-        "critique": critique
-    }
+    # Inner agents defined on the fly
+    @pl.track(model=MODEL, temperature=SUMMARIZE_TEMPERATURE)
+    def summarize(topic: str):
+        pl.log_prompt(summarize_template.format(topic=topic))
+        return summarize_chain.invoke({"topic": topic})
+
+    @pl.track(model=MODEL, temperature=CRITIQUE_TEMPERATURE)
+    def critique(explanation: str):
+        pl.log_prompt(critique_template.format(explanation=explanation))
+        return critique_chain.invoke({"explanation": explanation})
+
+    # Execution
+    summary = summarize(topic)
+    comment = critique(summary)
+    
+    return {"summary": summary, "critique": comment}
+
 
 
 if __name__ == "__main__":
