@@ -19,10 +19,6 @@
 - [API Reference](#api-reference)
 - [CLI Reference](#cli-reference)
 - [Integrations](#integrations)
-- [Configuration](#configuration)
-- [Multi-Agent & Hierarchical Tracking](#multi-agent--hierarchical-tracking)
-- [Database & Storage](#database--storage)
-- [Limitations & Roadmap](#limitations--roadmap)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -695,45 +691,6 @@ def run_conversation(task: str) -> str:
 
 run_conversation(TASK)
 ```
-
----
-
-## Configuration
-
-### Config Priority
-
-When multiple sources provide the same parameter, PromptLog resolves them in this order (highest wins):
-
-1. Explicit `@pl.track(model=..., temperature=...)` keyword arguments
-2. `config={"model": ..., "temperature": ...}` dict passed to `@pl.track`
-3. `pl.init(default_model=..., default_temperature=...)` project defaults
-4. `None`
-
-Tags are **merged** (not overridden): global defaults + decorator tags, with decorator winning on conflicts.
-
----
-
-### Storage Path Resolution
-
-When `storage_path` is not explicitly set in `pl.init()`, the database location is resolved in this order:
-
-1. Explicit `storage_path` passed to `pl.init(storage_path="/custom/path.db")`
-2. Local project folder: `./.promptlog/<project>.db` (if `./.promptlog/` exists in the current directory)
-3. Global home folder: `~/.promptlog/<project>.db`
-
-The parent directory is created automatically if it does not exist.
-
-**To use a local database** (useful for per-repo isolation):
-
-```bash
-mkdir .promptlog          # create the local folder
-echo ".promptlog/" >> .gitignore
-```
-
-```python
-pl.init(project="my_app")   # now uses ./.promptlog/my_app.db
-```
-
 ---
 
 ### Feedback Modes
@@ -750,96 +707,6 @@ pl.init(project="my_app", feedback_mode="none")   # silent, manual review later
 
 ---
 
-### Disabling Tracking
-
-Set `enabled=False` to make `@pl.track` a no-op (e.g., in production). Decorated functions execute normally; nothing is logged.
-
-```python
-import os
-import promptlog as pl
-
-pl.init(
-    project="my_app",
-    enabled=os.getenv("ENV") != "production",
-)
-```
-
----
-
-## Multi-Agent & Hierarchical Tracking
-
-PromptLog automatically detects nested `@pl.track` calls and links them as parent-child runs using Python `ContextVar`s. No manual wiring is needed.
-
-**How it works:**
-
-```
-run_pipeline()           <- outer @pl.track -> parent_run_id = None
-  summarize()            <- inner @pl.track -> parent_run_id = run_pipeline run_id
-  critique()             <- inner @pl.track -> parent_run_id = run_pipeline run_id
-```
-
-**ContextVar isolation** ensures that sibling and cousin calls never bleed into each other's state, even in deeply nested pipelines.
-
-**Viewing the tree:**
-
-```bash
-promptlog ls --project langchain_app
-```
-
-```
- run_id    name             model          ms    scored  passed
-───────────────────────────────────────────────────────────────
- a1b2c3d4  run_pipeline     -              850   yes     PASS
-   b2c3d4  ├─ summarize     gpt-4o-mini    415   yes     PASS
-   c3d4e5  └─ critique      gpt-4o-mini    435   yes     PASS
-```
-
----
-
-## Database & Storage
-
-PromptLog uses a local **SQLite** database per project.
-
-### Schema
-
-```sql
-CREATE TABLE runs (
-    run_id        TEXT PRIMARY KEY,
-    session_id    TEXT,
-    parent_run_id TEXT,
-    name          TEXT NOT NULL,
-    project       TEXT NOT NULL,
-    prompt        TEXT,
-    output        TEXT,
-    config_json   TEXT NOT NULL,
-    latency_ms    REAL,
-    feedback_json TEXT,
-    timestamp     TEXT NOT NULL,
-    error         TEXT
-)
-```
-
-### Details
-
-- **WAL mode** (`PRAGMA journal_mode=WAL`) is enabled for better read concurrency
-- `PromptConfig` and `FeedbackResult` are stored as Pydantic JSON blobs, preserving full type fidelity
-- **Automatic migrations**: old databases missing `session_id` or `parent_run_id` columns are updated on first use
-- **Idempotent init**: the `CREATE TABLE IF NOT EXISTS` guard prevents re-running DDL on every call
-
----
-
-## Limitations & Roadmap
-
-| Limitation | Status |
-|---|---|
-| No async function support | Planned for v2. Workaround: wrap with `asyncio.run()` inside a sync function. |
-| No web UI | FastAPI + Uvicorn stubs exist (`promptlog/ui/server.py`). Coming in a future release. |
-| No LLM-based auto-scoring | `FeedbackResult.feedback_by = "llm"` is reserved for v2. |
-| No YAML config files | PyYAML is a dependency but not yet wired up. |
-| No streaming support | Token-by-token streaming is not captured. |
-
----
-
 ## Contributing
 
 ```bash
@@ -848,21 +715,7 @@ cd PromptLog
 
 # Install in editable mode with dev dependencies
 pip install -e ".[examples]"
-pip install pytest
-
-# Run all tests
-pytest
-
-# Run specific suites
-pytest tests/test_schema.py
-pytest tests/test_store.py
-pytest tests/test_tracker.py
 ```
-
-Test coverage includes:
-- **`tests/test_schema.py`** — Pydantic model validation, MD5 versioning, `Run` properties
-- **`tests/test_store.py`** — SQLite round-trips, query filters, summary aggregation
-- **`tests/test_tracker.py`** — decorator behavior, config resolution, prompt capture, nested tracking, error handling
 
 Please open issues at [github.com/sujith-kamme/PromptLog/issues](https://github.com/sujith-kamme/PromptLog/issues).
 
