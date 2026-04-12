@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "A lightweight, framework-agnostic prompt tracking library for LLM projects — automatic logging, versioning, and run comparison."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "Apache-2.0" }
+license = { text = "MIT" }
 authors = [
     { name = "Sujith Kamme", email = "kammesujith27@gmail.com" }
 ]
@@ -22,7 +22,7 @@ keywords = [
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
