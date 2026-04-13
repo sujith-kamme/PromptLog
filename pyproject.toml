@@ -1,5 +1,5 @@
 [project]
-name = "promptlog"
+name = "prompt-log"
 version = "0.1.0"
 description = "A lightweight, framework-agnostic prompt tracking library for LLM projects — automatic logging, versioning, and run comparison."
 readme = "README.md"
@@ -30,15 +30,19 @@ classifiers = [
 ]
 dependencies = [
     "click>=8.3.2",
-    "fastapi>=0.135.3",
-    "langchain>=1.2.15",
     "pydantic>=2.12.5",
     "pyyaml>=6.0.3",
-    "rich>=14.3.3",
-    "uvicorn>=0.44.0",
+    "rich>=14.0.0",
 ]
 
 [project.optional-dependencies]
+ui = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.30.0",
+]
+langchain = [
+    "langchain>=0.3.0",
+]
 examples = [
     "openai>=1.0.0",
     "anthropic>=0.40.0",
@@ -54,6 +58,7 @@ examples = [
 Homepage = "https://github.com/sujith-kamme/PromptLog"
 Repository = "https://github.com/sujith-kamme/PromptLog"
 Issues = "https://github.com/sujith-kamme/PromptLog/issues"
+Changelog = "https://github.com/sujith-kamme/PromptLog/blob/main/CHANGELOG.md"
 
 [project.scripts]
 promptlog = "promptlog.cli:app"
