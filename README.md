@@ -104,9 +104,16 @@ Click any row to open the full run detail — prompt, output, model config, and 
 
 ## Documentation
 
-Full API reference, CLI reference, REST API docs, and integration examples are available in the web dashboard:
+Full API reference, CLI reference, REST API docs, and integration examples are in the bundled docs:
 
-![Documentation](docs.html)
+→ **[View Documentation](promptlog/ui/static/docs.html)**
+
+Or serve locally and open in your browser:
+
+```bash
+promptlog serve
+# Open http://localhost:8000/static/docs.html
+```
 
 ---
 
