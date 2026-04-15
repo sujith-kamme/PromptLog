@@ -15,4 +15,4 @@ wheels/
 .env
 Makefile
 .promptlog
-
+.DS_Store

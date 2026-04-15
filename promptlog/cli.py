@@ -17,6 +17,7 @@ from rich import box
 from promptlog.config import _resolve_storage_path
 from promptlog.schema import FeedbackResult
 from promptlog import store
+from promptlog.ui.server import app as ui_app
 
 console = Console()
 
@@ -428,6 +429,39 @@ def delete_cmd(run_id: str, project: str, yes: bool) -> None:
 
     store.delete_run(db_path, run_id)
     console.print(f"[green]✓ Deleted {run_id}[/green]")
+
+
+# ---------------------------------------------------------------------------
+# promptlog serve
+# ---------------------------------------------------------------------------
+
+
+@app.command("serve")
+@click.option("--host", default="127.0.0.1", help="Host to bind to")
+@click.option("--port", default=8000, help="Port to bind to")
+@click.option("--project", default=None, help="Open specific project (auto-opens in browser)")
+def serve_cmd(host: str, port: int, project: Optional[str]) -> None:
+    """Launch the web dashboard."""
+    import uvicorn
+    import webbrowser
+    import threading
+
+    url = f"http://{host}:{port}"
+    if project:
+        url += f"/?project={project}"
+
+    def open_browser():
+        import time
+        time.sleep(0.5)  # Wait for server to start
+        webbrowser.open(url)
+
+    console.print(f"[cyan]Starting PromptLog Dashboard at {url}[/cyan]")
+    console.print("[dim]Press Ctrl+C to stop[/dim]\n")
+
+    # Open browser in a separate thread after short delay
+    threading.Thread(target=open_browser, daemon=True).start()
+
+    uvicorn.run(ui_app, host=host, port=port, log_level="warning")
 
 
 # ---------------------------------------------------------------------------

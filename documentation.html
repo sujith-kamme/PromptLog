@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromptLog — Documentation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <style>
+    html { scroll-behavior: smooth; }
+    pre[class*="language-"] { border-radius: 0.5rem; margin: 1rem 0; font-size: 0.875rem; }
+    code[class*="language-"] { font-size: 0.875rem; }
+    .sidebar-link { transition: all 0.15s; }
+    .sidebar-link:hover { color: #3b82f6; padding-left: 0.25rem; }
+    .sidebar-link.active { color: #3b82f6; font-weight: 600; border-left: 2px solid #3b82f6; padding-left: 0.5rem; }
+    .param-table th { text-align: left; }
+    .param-table td, .param-table th { padding: 0.5rem 0.75rem; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; }
+    .param-table tr:last-child td { border-bottom: none; }
+    .section-anchor { scroll-margin-top: 5rem; }
+    @media (max-width: 1023px) {
+      .sidebar { display: none; }
+      .sidebar.open { display: block; position: fixed; top: 0; left: 0; width: 280px; height: 100vh; z-index: 50; background: white; box-shadow: 2px 0 8px rgba(0,0,0,0.1); overflow-y: auto; padding: 1rem; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+  <!-- Top Nav -->
+  <nav class="fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button onclick="toggleSidebar()" class="lg:hidden p-1 rounded hover:bg-gray-100">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="/" class="text-xl font-bold text-gray-900">PromptLog</a>
+      <span class="text-sm text-gray-400 hidden sm:inline">v0.1.0</span>
+    </div>
+  </nav>
+
+  <div class="flex pt-14">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar w-64 fixed top-14 left-0 h-[calc(100vh-3.5rem)] overflow-y-auto bg-white border-r border-gray-200 p-4 lg:block hidden">
+      <nav class="space-y-1 text-sm">
+        <p class="font-semibold text-gray-400 uppercase text-xs mb-2 tracking-wider">Getting Started</p>
+        <a href="#installation" class="sidebar-link block py-1 text-gray-600 pl-2">Installation</a>
+        <a href="#quick-start" class="sidebar-link block py-1 text-gray-600 pl-2">Quick Start</a>
+
+        <p class="font-semibold text-gray-400 uppercase text-xs mt-4 mb-2 tracking-wider">Python API</p>
+        <a href="#pl-init" class="sidebar-link block py-1 text-gray-600 pl-2">pl.init()</a>
+        <a href="#pl-track" class="sidebar-link block py-1 text-gray-600 pl-2">@pl.track()</a>
+        <a href="#pl-log-prompt" class="sidebar-link block py-1 text-gray-600 pl-2">pl.log_prompt()</a>
+        <a href="#nested-tracking" class="sidebar-link block py-1 text-gray-600 pl-2">Nested Tracking</a>
+        <a href="#auto-capture" class="sidebar-link block py-1 text-gray-600 pl-2">Auto-Capture</a>
+        <a href="#versioning" class="sidebar-link block py-1 text-gray-600 pl-2">Prompt Versioning</a>
+        <a href="#feedback-mode" class="sidebar-link block py-1 text-gray-600 pl-2">Feedback Mode</a>
+
+        <p class="font-semibold text-gray-400 uppercase text-xs mt-4 mb-2 tracking-wider">CLI Reference</p>
+        <a href="#cli-ls" class="sidebar-link block py-1 text-gray-600 pl-2">promptlog ls</a>
+        <a href="#cli-view" class="sidebar-link block py-1 text-gray-600 pl-2">promptlog view</a>
+        <a href="#cli-stats" class="sidebar-link block py-1 text-gray-600 pl-2">promptlog stats</a>
+        <a href="#cli-rescore" class="sidebar-link block py-1 text-gray-600 pl-2">promptlog rescore</a>
+        <a href="#cli-review" class="sidebar-link block py-1 text-gray-600 pl-2">promptlog review</a>
+        <a href="#cli-export" class="sidebar-link block py-1 text-gray-600 pl-2">promptlog export</a>
+        <a href="#cli-projects" class="sidebar-link block py-1 text-gray-600 pl-2">promptlog projects</a>
+        <a href="#cli-delete" class="sidebar-link block py-1 text-gray-600 pl-2">promptlog delete</a>
+        <a href="#cli-serve" class="sidebar-link block py-1 text-gray-600 pl-2">promptlog serve</a>
+
+        <p class="font-semibold text-gray-400 uppercase text-xs mt-4 mb-2 tracking-wider">Web Dashboard</p>
+        <a href="#dashboard-overview" class="sidebar-link block py-1 text-gray-600 pl-2">Overview</a>
+        <a href="#dashboard-filters" class="sidebar-link block py-1 text-gray-600 pl-2">Filtering & Search</a>
+        <a href="#dashboard-feedback" class="sidebar-link block py-1 text-gray-600 pl-2">Feedback & Scoring</a>
+        <a href="#dashboard-export" class="sidebar-link block py-1 text-gray-600 pl-2">Export</a>
+
+        <p class="font-semibold text-gray-400 uppercase text-xs mt-4 mb-2 tracking-wider">REST API</p>
+        <a href="#api-projects" class="sidebar-link block py-1 text-gray-600 pl-2">Projects</a>
+        <a href="#api-runs" class="sidebar-link block py-1 text-gray-600 pl-2">Runs</a>
+        <a href="#api-feedback" class="sidebar-link block py-1 text-gray-600 pl-2">Feedback</a>
+        <a href="#api-stats" class="sidebar-link block py-1 text-gray-600 pl-2">Stats</a>
+        <a href="#api-export" class="sidebar-link block py-1 text-gray-600 pl-2">Export</a>
+
+        <p class="font-semibold text-gray-400 uppercase text-xs mt-4 mb-2 tracking-wider">Data Model</p>
+        <a href="#model-run" class="sidebar-link block py-1 text-gray-600 pl-2">Run</a>
+        <a href="#model-config" class="sidebar-link block py-1 text-gray-600 pl-2">PromptConfig</a>
+        <a href="#model-feedback" class="sidebar-link block py-1 text-gray-600 pl-2">FeedbackResult</a>
+
+        <p class="font-semibold text-gray-400 uppercase text-xs mt-4 mb-2 tracking-wider">Configuration</p>
+        <a href="#storage-paths" class="sidebar-link block py-1 text-gray-600 pl-2">Storage Paths</a>
+        <a href="#database" class="sidebar-link block py-1 text-gray-600 pl-2">Database</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-64 px-6 py-8 max-w-4xl mx-auto">
+
+      <!-- Hero -->
+      <div class="mb-12">
+        <h1 class="text-4xl font-bold mb-3">PromptLog Documentation</h1>
+        <p class="text-lg text-gray-600 leading-relaxed">
+          A lightweight, framework-agnostic prompt tracking library for LLM projects.
+          Automatic logging, versioning, and run comparison — in three lines of code.
+        </p>
+      </div>
+
+      <!-- ================================================================== -->
+      <!-- GETTING STARTED -->
+      <!-- ================================================================== -->
+
+      <section class="mb-16">
+        <h2 id="installation" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Installation</h2>
+
+        <p class="mb-3 text-gray-700">Clone the repository and install in editable mode:</p>
+        <pre><code class="language-bash">git clone https://github.com/sujith-kamme/PromptLog.git
+cd PromptLog
+uv pip install -e ".[examples]"</code></pre>
+
+        <p class="mt-4 mb-3 text-gray-700">To also install the web dashboard dependencies:</p>
+        <pre><code class="language-bash">uv pip install -e ".[examples,ui]"</code></pre>
+
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r mt-4 text-sm text-blue-800">
+          <strong>Requirements:</strong> Python 3.11+ &bull; SQLite (bundled with Python) &bull; <a href="https://github.com/astral-sh/uv" class="underline" target="_blank">uv</a> (or use <code>pip install -e</code> directly)
+        </div>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="quick-start" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Quick Start</h2>
+
+        <p class="mb-3 text-gray-700">Add prompt tracking to any LLM call in three lines:</p>
+        <pre><code class="language-python">import promptlog as pl
+
+# 1. Initialize — all runs are grouped under this project
+pl.init(project="my_chatbot")
+
+# 2. Decorate any function that calls an LLM
+@pl.track(model="gpt-4o", temperature=0.7)
+def ask(question: str) -> str:
+    response = openai.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": question}],
+    )
+    return response.choices[0].message.content
+
+# 3. Call your function — PromptLog records everything automatically
+answer = ask("What is the capital of France?")
+print(answer)</code></pre>
+
+        <p class="mt-4 mb-3 text-gray-700">Then inspect your runs from the CLI:</p>
+        <pre><code class="language-bash"># List recent runs
+promptlog ls --project my_chatbot
+
+# View full details for a specific run
+promptlog view abc12345 --project my_chatbot
+
+# Launch the web dashboard
+promptlog serve</code></pre>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- PYTHON API -->
+      <!-- ================================================================== -->
+
+      <section class="mb-16">
+        <h2 id="pl-init" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">pl.init()</h2>
+
+        <p class="mb-4 text-gray-700">
+          Initialize PromptLog for your project. Must be called once before any <code class="bg-gray-100 px-1 rounded">@pl.track()</code> calls.
+          Creates or connects to a SQLite database and generates a unique session ID for this run.
+        </p>
+
+        <pre><code class="language-python">import promptlog as pl
+
+config = pl.init(
+    project="my_chatbot",
+    storage_path=None,           # auto-resolved (see Storage Paths)
+    feedback_mode="none",        # "none" or "end"
+    default_model="gpt-4o",      # fallback for all @pl.track calls
+    default_temperature=0.7,     # fallback temperature
+    default_tags={"env": "prod"},# merged into every run's tags
+    enabled=True,                # set False to disable all logging
+)</code></pre>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Parameters</h3>
+        <div class="overflow-x-auto">
+          <table class="param-table w-full bg-white rounded-lg border border-gray-200">
+            <thead class="bg-gray-50">
+              <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>project</code></td><td><code>str</code></td><td><em>required</em></td><td>Project name. All runs are grouped under this name.</td></tr>
+              <tr><td><code>storage_path</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Explicit path for the SQLite DB. If <code>None</code>, auto-resolved (see <a href="#storage-paths" class="text-blue-500 hover:underline">Storage Paths</a>).</td></tr>
+              <tr><td><code>feedback_mode</code></td><td><code>"none" | "end"</code></td><td><code>"none"</code></td><td><code>"end"</code> triggers an interactive review prompt when the script exits. <code>"none"</code> is silent.</td></tr>
+              <tr><td><code>default_model</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Fallback model name for all tracked functions.</td></tr>
+              <tr><td><code>default_temperature</code></td><td><code>float | None</code></td><td><code>None</code></td><td>Fallback temperature for all tracked functions.</td></tr>
+              <tr><td><code>default_tags</code></td><td><code>dict | None</code></td><td><code>{}</code></td><td>Tags merged into every run's metadata.</td></tr>
+              <tr><td><code>enabled</code></td><td><code>bool</code></td><td><code>True</code></td><td>Set <code>False</code> to disable all logging globally. Tracked functions still execute normally.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Returns</h3>
+        <p class="text-gray-700"><code class="bg-gray-100 px-1 rounded">PromptLogConfig</code> — the active configuration object (singleton).</p>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Example: Disable logging in tests</h3>
+        <pre><code class="language-python">import os
+import promptlog as pl
+
+pl.init(
+    project="my_chatbot",
+    enabled=os.getenv("ENVIRONMENT") != "test",
+)</code></pre>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="pl-track" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">@pl.track()</h2>
+
+        <p class="mb-4 text-gray-700">
+          Decorator that automatically logs every call to the decorated function as a <a href="#model-run" class="text-blue-500 hover:underline">Run</a>.
+          Captures the prompt (from arguments), output (return value), latency, errors, and all configuration.
+        </p>
+
+        <pre><code class="language-python">@pl.track(
+    name="summarizer",              # override display name (default: function name)
+    model="gpt-4o",                 # LLM model identifier
+    temperature=0.3,                # sampling temperature
+    max_tokens=500,                 # max tokens to generate
+    top_p=0.9,                      # nucleus sampling
+    top_k=50,                       # top-k sampling
+    system_prompt="You are a helpful summarizer.",
+    prompt_template="Summarize: {text}",  # auto-hashed for versioning
+    tags={"task": "summarization"},       # arbitrary metadata
+)
+def summarize(text: str) -> str:
+    response = openai.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful summarizer."},
+            {"role": "user", "content": f"Summarize: {text}"},
+        ],
+        temperature=0.3,
+        max_tokens=500,
+    )
+    return response.choices[0].message.content</code></pre>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Parameters</h3>
+        <div class="overflow-x-auto">
+          <table class="param-table w-full bg-white rounded-lg border border-gray-200">
+            <thead class="bg-gray-50">
+              <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>name</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Override the display name. Defaults to the function name.</td></tr>
+              <tr><td><code>model</code></td><td><code>str | None</code></td><td><code>None</code></td><td>LLM model identifier (e.g., <code>"gpt-4o"</code>, <code>"claude-sonnet-4-20250514"</code>).</td></tr>
+              <tr><td><code>temperature</code></td><td><code>float | None</code></td><td><code>None</code></td><td>Sampling temperature.</td></tr>
+              <tr><td><code>max_tokens</code></td><td><code>int | None</code></td><td><code>None</code></td><td>Maximum tokens to generate.</td></tr>
+              <tr><td><code>top_p</code></td><td><code>float | None</code></td><td><code>None</code></td><td>Top-p (nucleus) sampling parameter.</td></tr>
+              <tr><td><code>top_k</code></td><td><code>int | None</code></td><td><code>None</code></td><td>Top-k sampling parameter.</td></tr>
+              <tr><td><code>system_prompt</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Static system prompt text.</td></tr>
+              <tr><td><code>prompt_template</code></td><td><code>str | None</code></td><td><code>None</code></td><td>Raw template before variable substitution. Auto-hashed (MD5, 8 chars) for <a href="#versioning" class="text-blue-500 hover:underline">versioning</a>.</td></tr>
+              <tr><td><code>config</code></td><td><code>dict | None</code></td><td><code>None</code></td><td>Dict fallback for any parameters above. Lower priority than explicit args.</td></tr>
+              <tr><td><code>tags</code></td><td><code>dict | None</code></td><td><code>None</code></td><td>Arbitrary metadata merged with global <code>default_tags</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Config Priority</h3>
+        <p class="text-gray-700 mb-2">Parameters are resolved in this order (highest priority first):</p>
+        <ol class="list-decimal list-inside text-gray-700 space-y-1 ml-2">
+          <li>Explicit params on <code class="bg-gray-100 px-1 rounded">@pl.track(model="gpt-4o")</code></li>
+          <li>The <code class="bg-gray-100 px-1 rounded">config</code> dict: <code class="bg-gray-100 px-1 rounded">@pl.track(config={"model": "gpt-4o"})</code></li>
+          <li>Defaults from <code class="bg-gray-100 px-1 rounded">pl.init(default_model="gpt-4o")</code></li>
+          <li><code class="bg-gray-100 px-1 rounded">None</code></li>
+        </ol>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Example: Using config dict</h3>
+        <pre><code class="language-python">MODEL_CONFIG = {
+    "model": "gpt-4o",
+    "temperature": 0.7,
+    "max_tokens": 1000,
+}
+
+@pl.track(config=MODEL_CONFIG, name="chat_agent")
+def chat(user_message: str) -> str:
+    # ... your LLM call
+    pass</code></pre>
+
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r mt-4 text-sm text-yellow-800">
+          <strong>Note:</strong> <code>@pl.track()</code> only supports synchronous functions in v0.1. Decorating an <code>async</code> function raises <code>NotImplementedError</code>.
+        </div>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="pl-log-prompt" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">pl.log_prompt()</h2>
+
+        <p class="mb-4 text-gray-700">
+          Explicitly record the rendered prompt for the current tracked run. Call this inside a
+          <code class="bg-gray-100 px-1 rounded">@pl.track()</code>-decorated function to capture the exact prompt sent to the LLM.
+        </p>
+
+        <pre><code class="language-python">@pl.track(model="gpt-4o", prompt_template="Translate {lang}: {text}")
+def translate(text: str, lang: str) -> str:
+    prompt = f"Translate to {lang}: {text}"
+    pl.log_prompt(prompt)  # explicitly capture the rendered prompt
+
+    response = openai.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return response.choices[0].message.content</code></pre>
+
+        <div class="bg-gray-50 border-l-4 border-gray-300 p-4 rounded-r mt-4 text-sm text-gray-700">
+          <strong>Auto-capture fallback:</strong> If <code>log_prompt()</code> is never called, PromptLog automatically
+          joins all string arguments passed to the function as the prompt. Use <code>log_prompt()</code> when you need
+          to capture the exact rendered prompt rather than raw arguments.
+        </div>
+
+        <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-r mt-2 text-sm text-red-800">
+          <strong>Error:</strong> Calling <code>pl.log_prompt()</code> outside a <code>@pl.track()</code>-decorated function
+          raises <code>RuntimeError</code>.
+        </div>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="nested-tracking" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Nested Tracking</h2>
+
+        <p class="mb-4 text-gray-700">
+          When a <code class="bg-gray-100 px-1 rounded">@pl.track()</code>-decorated function calls another tracked function,
+          PromptLog automatically sets the <code class="bg-gray-100 px-1 rounded">parent_run_id</code> — creating a hierarchy
+          of runs. This is useful for agent pipelines and multi-step workflows.
+        </p>
+
+        <pre><code class="language-python">import promptlog as pl
+
+pl.init(project="agent_pipeline")
+
+@pl.track(model="gpt-4o", name="research_agent")
+def research(topic: str) -> str:
+    # ... calls LLM to gather information
+    return "Research findings..."
+
+@pl.track(model="gpt-4o", name="writer_agent")
+def write(findings: str) -> str:
+    # ... calls LLM to write an article
+    return "Final article..."
+
+@pl.track(name="pipeline")
+def run_pipeline(topic: str) -> str:
+    findings = research(topic)   # child run — parent_run_id set automatically
+    article = write(findings)    # child run — parent_run_id set automatically
+    return article
+
+run_pipeline("quantum computing")</code></pre>
+
+        <p class="mt-4 text-gray-700">
+          The CLI displays nested runs as a tree:
+        </p>
+        <pre><code class="language-bash">$ promptlog ls --project agent_pipeline
+# run_id   name             model    ms     scored  passed
+# a1b2c3d4 pipeline         -        3200   no      -
+# ├─ e5f6g7h8 research_agent gpt-4o  1500   no      -
+# └─ i9j0k1l2 writer_agent   gpt-4o  1700   no      -</code></pre>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="auto-capture" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Auto-Capture</h2>
+
+        <p class="mb-4 text-gray-700">
+          PromptLog automatically captures several values without any extra code:
+        </p>
+
+        <div class="space-y-4">
+          <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h4 class="font-semibold text-gray-900 mb-1">Prompt</h4>
+            <p class="text-sm text-gray-600">If <code>pl.log_prompt()</code> is not called, all string arguments passed to the function are joined and stored as the prompt.</p>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h4 class="font-semibold text-gray-900 mb-1">Output</h4>
+            <p class="text-sm text-gray-600">The function's return value is converted to a string and stored as the output.</p>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h4 class="font-semibold text-gray-900 mb-1">Latency</h4>
+            <p class="text-sm text-gray-600">Wall-clock execution time in milliseconds, measured from function entry to return.</p>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h4 class="font-semibold text-gray-900 mb-1">Errors</h4>
+            <p class="text-sm text-gray-600">If the function raises an exception, it's captured as <code>"ExceptionType: message"</code>. The exception is re-raised after logging.</p>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h4 class="font-semibold text-gray-900 mb-1">Parent Run</h4>
+            <p class="text-sm text-gray-600">Nested <code>@pl.track()</code> calls automatically set <code>parent_run_id</code> using context variables.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="versioning" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Prompt Versioning</h2>
+
+        <p class="mb-4 text-gray-700">
+          When you provide a <code class="bg-gray-100 px-1 rounded">prompt_template</code>, PromptLog automatically generates a version hash
+          (MD5, first 8 hex characters). Same template always produces the same version — making it easy to compare performance across prompt changes.
+        </p>
+
+        <pre><code class="language-python"># Version: "a3f8b2c1" (auto-generated from template hash)
+@pl.track(
+    model="gpt-4o",
+    prompt_template="Summarize the following text in {n} bullet points:\n{text}",
+)
+def summarize_v1(text: str, n: int = 3) -> str:
+    # ...
+    pass
+
+# Version: "d7e9f4a0" (different template = different version)
+@pl.track(
+    model="gpt-4o",
+    prompt_template="Create a {n}-point summary of:\n{text}\nBe concise.",
+)
+def summarize_v2(text: str, n: int = 3) -> str:
+    # ...
+    pass</code></pre>
+
+        <p class="mt-4 text-gray-700">Compare versions with the CLI:</p>
+        <pre><code class="language-bash">$ promptlog stats --project my_chatbot
+# name          version   total  scored  passed  failed  avg_score
+# summarize_v1  a3f8b2c1  50     30      25      5       0.83
+# summarize_v2  d7e9f4a0  50     30      28      2       0.91</code></pre>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="feedback-mode" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Feedback Mode</h2>
+
+        <p class="mb-4 text-gray-700">
+          Set <code class="bg-gray-100 px-1 rounded">feedback_mode="end"</code> to automatically trigger an interactive review prompt
+          when your script exits. Only runs from the current session are shown.
+        </p>
+
+        <pre><code class="language-python">import promptlog as pl
+
+pl.init(project="my_chatbot", feedback_mode="end")
+
+@pl.track(model="gpt-4o")
+def ask(question: str) -> str:
+    # ... your LLM call
+    return "answer"
+
+ask("What is Python?")
+ask("What is JavaScript?")
+
+# When the script exits, PromptLog prompts:
+#   ask: "What is Python?" → "answer"
+#   [p]ass / [f]ail / [s]core / [n]ext / [q]uit?</code></pre>
+
+        <p class="mt-4 text-gray-700">
+          The review loop shows each run in compact mode and accepts:
+        </p>
+        <ul class="list-disc list-inside text-gray-700 space-y-1 ml-2 mt-2">
+          <li><strong>p</strong> — Mark as PASS (score=1.0)</li>
+          <li><strong>f</strong> — Mark as FAIL (score=0.0)</li>
+          <li><strong>s</strong> — Enter a custom score (0.0–1.0), optional label, and notes</li>
+          <li><strong>n</strong> — Skip this run</li>
+          <li><strong>q</strong> — Quit and save progress</li>
+        </ul>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- CLI REFERENCE -->
+      <!-- ================================================================== -->
+
+      <section class="mb-16">
+        <h2 id="cli-ls" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">promptlog ls</h2>
+
+        <p class="mb-4 text-gray-700">List logged runs for a project, rendered as a hierarchical tree with parent-child relationships.</p>
+
+        <pre><code class="language-bash">promptlog ls --project &lt;name&gt; [--name &lt;task&gt;] [--unscored] [--failed] [--last N]</code></pre>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Options</h3>
+        <div class="overflow-x-auto">
+          <table class="param-table w-full bg-white rounded-lg border border-gray-200">
+            <thead class="bg-gray-50">
+              <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>--project</code></td><td><code>str</code></td><td><em>required</em></td><td>Project name.</td></tr>
+              <tr><td><code>--name</code></td><td><code>str</code></td><td>—</td><td>Filter by function/task name.</td></tr>
+              <tr><td><code>--unscored</code></td><td>flag</td><td><code>False</code></td><td>Show only unscored runs.</td></tr>
+              <tr><td><code>--failed</code></td><td>flag</td><td><code>False</code></td><td>Show only runs with errors.</td></tr>
+              <tr><td><code>--last</code></td><td><code>int</code></td><td>—</td><td>Show last N runs.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Example</h3>
+        <pre><code class="language-bash"># List last 5 unscored runs
+promptlog ls --project my_chatbot --unscored --last 5
+
+# List only runs for a specific task
+promptlog ls --project agent_pipeline --name research_agent</code></pre>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="cli-view" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">promptlog view</h2>
+
+        <p class="mb-4 text-gray-700">View full details for a specific run — prompt, output, configuration, and feedback.</p>
+
+        <pre><code class="language-bash">promptlog view &lt;run_id&gt; --project &lt;name&gt;</code></pre>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Display Panels</h3>
+        <ul class="list-disc list-inside text-gray-700 space-y-1 ml-2">
+          <li><strong>Run Profile:</strong> Task name, project, model, temperature, latency, version</li>
+          <li><strong>Prompt:</strong> Full prompt text (cyan border)</li>
+          <li><strong>Output/Error:</strong> Markdown-rendered output or error message (red)</li>
+          <li><strong>Feedback:</strong> Label, score, and notes (if scored)</li>
+        </ul>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Example</h3>
+        <pre><code class="language-bash">promptlog view a1b2c3d4 --project my_chatbot</code></pre>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="cli-stats" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">promptlog stats</h2>
+
+        <p class="mb-4 text-gray-700">View aggregated pass rates and average scores per task and prompt version.</p>
+
+        <pre><code class="language-bash">promptlog stats --project &lt;name&gt;</code></pre>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Output Columns</h3>
+        <ul class="list-disc list-inside text-gray-700 space-y-1 ml-2">
+          <li><strong>name</strong> — Function/task name</li>
+          <li><strong>version</strong> — Prompt template hash</li>
+          <li><strong>total</strong> — Total runs for this (name, version) pair</li>
+          <li><strong>scored</strong> — Runs with feedback</li>
+          <li><strong>passed</strong> — Runs with PASS/CORRECT/PROCEED or score &ge; 0.5</li>
+          <li><strong>failed</strong> — Runs with FAIL or score &lt; 0.5</li>
+          <li><strong>avg_score</strong> — Average feedback score (0.00–1.00)</li>
+        </ul>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Example</h3>
+        <pre><code class="language-bash">$ promptlog stats --project my_chatbot
+# name       version   total  scored  passed  failed  avg_score
+# ask        a3f8b2c1  100    60      52      8       0.87
+# summarize  d7e9f4a0  45     20      18      2       0.92</code></pre>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="cli-rescore" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">promptlog rescore</h2>
+
+        <p class="mb-4 text-gray-700">Manually set or update feedback for a specific run.</p>
+
+        <pre><code class="language-bash">promptlog rescore &lt;run_id&gt; --project &lt;name&gt; [--pass | --fail | --score &lt;val&gt;] [--label &lt;str&gt;] [--notes &lt;str&gt;]</code></pre>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Options</h3>
+        <div class="overflow-x-auto">
+          <table class="param-table w-full bg-white rounded-lg border border-gray-200">
+            <thead class="bg-gray-50">
+              <tr><th>Option</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>--project</code></td><td><code>str</code></td><td>Project name (required).</td></tr>
+              <tr><td><code>--pass</code></td><td>flag</td><td>Mark as PASS (score=1.0, label="PASS").</td></tr>
+              <tr><td><code>--fail</code></td><td>flag</td><td>Mark as FAIL (score=0.0, label="FAIL").</td></tr>
+              <tr><td><code>--score</code></td><td><code>float</code></td><td>Custom score between 0.0 and 1.0.</td></tr>
+              <tr><td><code>--label</code></td><td><code>str</code></td><td>Custom label (e.g., "PARTIAL").</td></tr>
+              <tr><td><code>--notes</code></td><td><code>str</code></td><td>Free-text notes.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="mt-4 text-sm text-gray-500">At least one of <code>--pass</code>, <code>--fail</code>, <code>--score</code>, or <code>--label</code> is required. If the run is already scored, you'll be prompted to confirm the overwrite.</p>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Examples</h3>
+        <pre><code class="language-bash"># Quick pass/fail
+promptlog rescore a1b2c3d4 --project my_chatbot --pass
+promptlog rescore e5f6g7h8 --project my_chatbot --fail
+
+# Custom score with notes
+promptlog rescore a1b2c3d4 --project my_chatbot --score 0.75 --label "PARTIAL" --notes "Got the facts right but missed the tone"</code></pre>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="cli-review" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">promptlog review</h2>
+
+        <p class="mb-4 text-gray-700">Interactively score all unscored runs one by one. Displays prompt and output panels for each run and prompts for feedback.</p>
+
+        <pre><code class="language-bash">promptlog review --project &lt;name&gt;</code></pre>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Interactive Options</h3>
+        <div class="overflow-x-auto">
+          <table class="param-table w-full bg-white rounded-lg border border-gray-200">
+            <thead class="bg-gray-50">
+              <tr><th>Key</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>p</code></td><td>Mark as PASS (score=1.0, label="PASS")</td></tr>
+              <tr><td><code>f</code></td><td>Mark as FAIL (score=0.0, label="FAIL")</td></tr>
+              <tr><td><code>s</code></td><td>Enter custom score (0.0–1.0), optional label, optional notes</td></tr>
+              <tr><td><code>n</code></td><td>Skip this run</td></tr>
+              <tr><td><code>q</code></td><td>Quit review and save progress</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Example</h3>
+        <pre><code class="language-bash">$ promptlog review --project my_chatbot
+# ┌─ Prompt ─────────────────────────────────────────┐
+# │ What is the capital of France?                    │
+# └───────────────────────────────────────────────────┘
+# ┌─ Output ─────────────────────────────────────────┐
+# │ The capital of France is Paris.                   │
+# └───────────────────────────────────────────────────┘
+# Model: gpt-4o  Temperature: 0.7
+# [p]ass / [f]ail / [s]core / [n]ext / [q]uit? p
+# ✓ Saved: PASS</code></pre>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="cli-export" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">promptlog export</h2>
+
+        <p class="mb-4 text-gray-700">Export all runs for a project to CSV or JSON format.</p>
+
+        <pre><code class="language-bash">promptlog export --project &lt;name&gt; [--format csv|json] [--output &lt;file&gt;]</code></pre>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Options</h3>
+        <div class="overflow-x-auto">
+          <table class="param-table w-full bg-white rounded-lg border border-gray-200">
+            <thead class="bg-gray-50">
+              <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>--project</code></td><td><code>str</code></td><td><em>required</em></td><td>Project name.</td></tr>
+              <tr><td><code>--format</code> / <code>--fmt</code></td><td><code>csv | json</code></td><td><code>csv</code></td><td>Output format.</td></tr>
+              <tr><td><code>--output</code></td><td><code>str</code></td><td>stdout</td><td>File path to write. Prints to stdout if omitted.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Examples</h3>
+        <pre><code class="language-bash"># Export to CSV file
+promptlog export --project my_chatbot --format csv --output runs.csv
+
+# Export JSON to stdout
+promptlog export --project my_chatbot --format json
+
+# Pipe to jq for processing
+promptlog export --project my_chatbot --format json | jq '.[].model'</code></pre>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="cli-projects" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">promptlog projects</h2>
+
+        <p class="mb-4 text-gray-700">List all known projects by scanning for <code class="bg-gray-100 px-1 rounded">.db</code> files in <code class="bg-gray-100 px-1 rounded">~/.promptlog/</code> and <code class="bg-gray-100 px-1 rounded">./.promptlog/</code>.</p>
+
+        <pre><code class="language-bash">promptlog projects</code></pre>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Output</h3>
+        <pre><code class="language-bash">$ promptlog projects
+# project       runs  db_path
+# agent_pipeline  42  /Users/you/.promptlog/agent_pipeline.db
+# my_chatbot     156  /Users/you/.promptlog/my_chatbot.db
+# summarizer      23  /Users/you/project/.promptlog/summarizer.db</code></pre>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="cli-delete" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">promptlog delete</h2>
+
+        <p class="mb-4 text-gray-700">Delete a specific run from the database.</p>
+
+        <pre><code class="language-bash">promptlog delete &lt;run_id&gt; --project &lt;name&gt; [--yes]</code></pre>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Options</h3>
+        <div class="overflow-x-auto">
+          <table class="param-table w-full bg-white rounded-lg border border-gray-200">
+            <thead class="bg-gray-50">
+              <tr><th>Option</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>--project</code></td><td><code>str</code></td><td>Project name (required).</td></tr>
+              <tr><td><code>--yes</code> / <code>-y</code></td><td>flag</td><td>Skip confirmation prompt.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Examples</h3>
+        <pre><code class="language-bash"># Delete with confirmation prompt
+promptlog delete a1b2c3d4 --project my_chatbot
+
+# Skip confirmation
+promptlog delete a1b2c3d4 --project my_chatbot --yes</code></pre>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="cli-serve" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">promptlog serve</h2>
+
+        <p class="mb-4 text-gray-700">Launch the web dashboard. Requires <code class="bg-gray-100 px-1 rounded">fastapi</code> and <code class="bg-gray-100 px-1 rounded">uvicorn</code> — included when you install with <code class="bg-gray-100 px-1 rounded">.[ui]</code> or <code class="bg-gray-100 px-1 rounded">.[examples,ui]</code>.</p>
+
+        <pre><code class="language-bash">promptlog serve [--host &lt;host&gt;] [--port &lt;port&gt;] [--project &lt;name&gt;]</code></pre>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Options</h3>
+        <div class="overflow-x-auto">
+          <table class="param-table w-full bg-white rounded-lg border border-gray-200">
+            <thead class="bg-gray-50">
+              <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>--host</code></td><td><code>str</code></td><td><code>127.0.0.1</code></td><td>Host to bind to.</td></tr>
+              <tr><td><code>--port</code></td><td><code>int</code></td><td><code>8000</code></td><td>Port to bind to.</td></tr>
+              <tr><td><code>--project</code></td><td><code>str</code></td><td>—</td><td>Auto-open this project in the browser.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Examples</h3>
+        <pre><code class="language-bash"># Default: http://127.0.0.1:8000
+promptlog serve
+
+# Custom port, auto-open project
+promptlog serve --port 3000 --project my_chatbot
+
+# Bind to all interfaces (e.g., for Docker)
+promptlog serve --host 0.0.0.0 --port 8080</code></pre>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- WEB DASHBOARD -->
+      <!-- ================================================================== -->
+
+      <section class="mb-16">
+        <h2 id="dashboard-overview" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Web Dashboard — Overview</h2>
+
+        <p class="mb-4 text-gray-700">
+          The web dashboard is a single-page application built with Alpine.js and Tailwind CSS. Launch it with <code class="bg-gray-100 px-1 rounded">promptlog serve</code>.
+        </p>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Layout</h3>
+        <ul class="list-disc list-inside text-gray-700 space-y-2 ml-2">
+          <li><strong>Top Navigation:</strong> Project selector dropdown, view toggle (Runs / Stats), export buttons (CSV / JSON)</li>
+          <li><strong>Summary Cards:</strong> Total Runs, Scored, Passed, Failed, Pass Rate — displayed when a project is selected</li>
+          <li><strong>Runs View:</strong> Filterable table showing all runs with tree indentation for nested runs. Click any row to open the detail modal.</li>
+          <li><strong>Stats View:</strong> Aggregated metrics per (name, version) group — total, scored, passed, failed, avg score.</li>
+          <li><strong>Run Detail Modal:</strong> Full prompt/output display, configuration panel, parent/child hierarchy links, feedback form, and delete button.</li>
+        </ul>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="dashboard-filters" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Filtering & Search</h2>
+
+        <p class="mb-4 text-gray-700">The runs view includes a filter panel above the table. All filters are live — changes take effect immediately.</p>
+
+        <div class="overflow-x-auto">
+          <table class="param-table w-full bg-white rounded-lg border border-gray-200">
+            <thead class="bg-gray-50">
+              <tr><th>Filter</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Search</strong></td><td>Text input</td><td>Full-text search across prompt and output fields (case-insensitive).</td></tr>
+              <tr><td><strong>Unscored Only</strong></td><td>Checkbox</td><td>Show only runs without feedback.</td></tr>
+              <tr><td><strong>Failed Only</strong></td><td>Checkbox</td><td>Show only runs that raised exceptions.</td></tr>
+              <tr><td><strong>Version</strong></td><td>Dropdown</td><td>Filter by prompt template version hash.</td></tr>
+              <tr><td><strong>Model</strong></td><td>Dropdown</td><td>Filter by LLM model name.</td></tr>
+              <tr><td><strong>Last N</strong></td><td>Number input</td><td>Show only the last N runs.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="dashboard-feedback" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Feedback & Scoring</h2>
+
+        <p class="mb-4 text-gray-700">
+          Click any run row to open the detail modal. The right pane contains a feedback form:
+        </p>
+
+        <ul class="list-disc list-inside text-gray-700 space-y-1 ml-2">
+          <li><strong>Score:</strong> Numeric input (0.0–1.0, step 0.1)</li>
+          <li><strong>Label:</strong> Dropdown with options: PASS, FAIL, PARTIAL, CORRECT, or a custom value</li>
+          <li><strong>Notes:</strong> Free-text textarea for comments</li>
+          <li><strong>Save Feedback:</strong> Persists to the database via the REST API</li>
+        </ul>
+
+        <p class="mt-4 text-gray-700">
+          You can also delete a run from the modal — click "Delete Run", then confirm.
+        </p>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="dashboard-export" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Export</h2>
+
+        <p class="mb-4 text-gray-700">
+          Click the "Export CSV" or "Export JSON" button in the top navigation to download all runs for the current project as a file.
+        </p>
+        <ul class="list-disc list-inside text-gray-700 space-y-1 ml-2">
+          <li><strong>CSV:</strong> Downloads <code class="bg-gray-100 px-1 rounded">{project}_runs.csv</code> with all run fields (prompt/output truncated to 80 chars).</li>
+          <li><strong>JSON:</strong> Downloads <code class="bg-gray-100 px-1 rounded">{project}_runs.json</code> with full run data.</li>
+        </ul>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- REST API -->
+      <!-- ================================================================== -->
+
+      <section class="mb-16">
+        <h2 id="api-projects" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">API — Projects</h2>
+
+        <div class="space-y-8">
+          <!-- GET /api/projects -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-0.5 rounded">GET</span>
+              <code class="text-sm font-mono">/api/projects</code>
+            </div>
+            <p class="text-sm text-gray-600 mb-3">List all known projects.</p>
+            <p class="text-xs font-semibold text-gray-500 mb-1">Response</p>
+            <pre><code class="language-json">[
+  {
+    "name": "my_chatbot",
+    "run_count": 156,
+    "db_path": "/Users/you/.promptlog/my_chatbot.db"
+  }
+]</code></pre>
+          </div>
+
+          <!-- GET /api/projects/{name} -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-0.5 rounded">GET</span>
+              <code class="text-sm font-mono">/api/projects/{project_name}</code>
+            </div>
+            <p class="text-sm text-gray-600 mb-3">Get project metadata and summary stats.</p>
+            <p class="text-xs font-semibold text-gray-500 mb-1">Response</p>
+            <pre><code class="language-json">{
+  "name": "my_chatbot",
+  "db_path": "/Users/you/.promptlog/my_chatbot.db",
+  "total_runs": 156,
+  "scored_runs": 80,
+  "passed_runs": 68,
+  "failed_runs": 12,
+  "pass_rate": 0.85,
+  "versions": ["a3f8b2c1", "d7e9f4a0"],
+  "models": ["gpt-4o", "claude-sonnet-4-20250514"]
+}</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="api-runs" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">API — Runs</h2>
+
+        <div class="space-y-8">
+          <!-- GET /api/projects/{name}/runs -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-0.5 rounded">GET</span>
+              <code class="text-sm font-mono">/api/projects/{project_name}/runs</code>
+            </div>
+            <p class="text-sm text-gray-600 mb-3">List runs with optional filters.</p>
+
+            <p class="text-xs font-semibold text-gray-500 mb-1">Query Parameters</p>
+            <div class="overflow-x-auto mb-3">
+              <table class="param-table w-full bg-white rounded-lg border border-gray-200">
+                <thead class="bg-gray-50">
+                  <tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><code>unscored</code></td><td><code>bool</code></td><td><code>false</code></td><td>Only unscored runs.</td></tr>
+                  <tr><td><code>failed</code></td><td><code>bool</code></td><td><code>false</code></td><td>Only failed runs.</td></tr>
+                  <tr><td><code>version</code></td><td><code>str</code></td><td>—</td><td>Filter by version hash.</td></tr>
+                  <tr><td><code>model</code></td><td><code>str</code></td><td>—</td><td>Filter by model name.</td></tr>
+                  <tr><td><code>name</code></td><td><code>str</code></td><td>—</td><td>Filter by task name.</td></tr>
+                  <tr><td><code>last</code></td><td><code>int</code></td><td>—</td><td>Limit to last N runs.</td></tr>
+                  <tr><td><code>search</code></td><td><code>str</code></td><td>—</td><td>Full-text search in prompt &amp; output.</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p class="text-xs font-semibold text-gray-500 mb-1">Response</p>
+            <pre><code class="language-json">{
+  "runs": [
+    {
+      "run_id": "a1b2c3d4",
+      "session_id": "e5f6g7h8",
+      "parent_run_id": null,
+      "name": "ask",
+      "project": "my_chatbot",
+      "model": "gpt-4o",
+      "temperature": 0.7,
+      "version": "a3f8b2c1",
+      "prompt": "What is the capital of France?",
+      "output": "The capital of France is Paris.",
+      "latency_ms": 1234.5,
+      "is_scored": true,
+      "feedback_score": 1.0,
+      "feedback_label": "PASS",
+      "feedback_notes": null,
+      "passed": true,
+      "timestamp": "2025-01-15T10:30:00",
+      "error": null
+    }
+  ],
+  "total": 1,
+  "filtered": 1
+}</code></pre>
+          </div>
+
+          <!-- GET /api/projects/{name}/runs/{run_id} -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-0.5 rounded">GET</span>
+              <code class="text-sm font-mono">/api/projects/{project_name}/runs/{run_id}</code>
+            </div>
+            <p class="text-sm text-gray-600 mb-3">Get a single run with parent and children.</p>
+            <p class="text-xs font-semibold text-gray-500 mb-1">Response</p>
+            <pre><code class="language-json">{
+  "run": { "run_id": "a1b2c3d4", "..." : "..." },
+  "parent": null,
+  "children": [
+    { "run_id": "e5f6g7h8", "name": "research_agent", "..." : "..." },
+    { "run_id": "i9j0k1l2", "name": "writer_agent", "..." : "..." }
+  ]
+}</code></pre>
+          </div>
+
+          <!-- DELETE /api/runs/{run_id} -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-0.5 rounded">DELETE</span>
+              <code class="text-sm font-mono">/api/runs/{run_id}?project={name}</code>
+            </div>
+            <p class="text-sm text-gray-600 mb-3">Delete a run by ID.</p>
+            <p class="text-xs font-semibold text-gray-500 mb-1">Response</p>
+            <pre><code class="language-json">{
+  "status": "ok",
+  "deleted": "a1b2c3d4"
+}</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="api-feedback" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">API — Feedback</h2>
+
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-0.5 rounded">PUT</span>
+            <code class="text-sm font-mono">/api/runs/{run_id}/feedback</code>
+          </div>
+          <p class="text-sm text-gray-600 mb-3">Update or create feedback for a run. Scans all projects to find the run.</p>
+
+          <p class="text-xs font-semibold text-gray-500 mb-1">Request Body</p>
+          <pre><code class="language-json">{
+  "score": 0.85,
+  "label": "PASS",
+  "notes": "Good response, accurate and well-structured."
+}</code></pre>
+
+          <p class="text-xs font-semibold text-gray-500 mt-3 mb-1">Response</p>
+          <p class="text-sm text-gray-600">Returns the updated run object (same shape as GET run response).</p>
+        </div>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="api-stats" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">API — Stats</h2>
+
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-0.5 rounded">GET</span>
+            <code class="text-sm font-mono">/api/projects/{project_name}/stats</code>
+          </div>
+          <p class="text-sm text-gray-600 mb-3">Get aggregated stats per (name, version) group.</p>
+          <p class="text-xs font-semibold text-gray-500 mb-1">Response</p>
+          <pre><code class="language-json">{
+  "stats": [
+    {
+      "name": "ask",
+      "version": "a3f8b2c1",
+      "total": 100,
+      "scored": 60,
+      "passed": 52,
+      "failed": 8,
+      "avg_score": 0.87
+    }
+  ]
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="api-export" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">API — Export</h2>
+
+        <div class="space-y-6">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-0.5 rounded">GET</span>
+              <code class="text-sm font-mono">/api/projects/{project_name}/export/csv</code>
+            </div>
+            <p class="text-sm text-gray-600">Downloads all runs as a CSV file. Filename: <code class="bg-gray-100 px-1 rounded">{project}_runs.csv</code></p>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-0.5 rounded">GET</span>
+              <code class="text-sm font-mono">/api/projects/{project_name}/export/json</code>
+            </div>
+            <p class="text-sm text-gray-600">Downloads all runs as a JSON file. Filename: <code class="bg-gray-100 px-1 rounded">{project}_runs.json</code></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- DATA MODEL -->
+      <!-- ================================================================== -->
+
+      <section class="mb-16">
+        <h2 id="model-run" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Data Model — Run</h2>
+
+        <p class="mb-4 text-gray-700">Represents a single execution of a <code class="bg-gray-100 px-1 rounded">@pl.track()</code>-decorated function.</p>
+
+        <div class="overflow-x-auto">
+          <table class="param-table w-full bg-white rounded-lg border border-gray-200">
+            <thead class="bg-gray-50">
+              <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>run_id</code></td><td><code>str</code></td><td>Unique 8-char identifier (auto-generated UUID prefix).</td></tr>
+              <tr><td><code>session_id</code></td><td><code>str | None</code></td><td>Groups runs from the same <code>pl.init()</code> call.</td></tr>
+              <tr><td><code>parent_run_id</code></td><td><code>str | None</code></td><td>Set when called inside another tracked function.</td></tr>
+              <tr><td><code>name</code></td><td><code>str</code></td><td>Function/task name.</td></tr>
+              <tr><td><code>project</code></td><td><code>str</code></td><td>Project name.</td></tr>
+              <tr><td><code>prompt</code></td><td><code>str | None</code></td><td>Rendered prompt sent to the LLM.</td></tr>
+              <tr><td><code>output</code></td><td><code>str | None</code></td><td>Return value as string.</td></tr>
+              <tr><td><code>config</code></td><td><code>PromptConfig</code></td><td>Full configuration snapshot.</td></tr>
+              <tr><td><code>latency_ms</code></td><td><code>float | None</code></td><td>Execution time in milliseconds.</td></tr>
+              <tr><td><code>feedback</code></td><td><code>FeedbackResult | None</code></td><td>Human feedback (null until scored).</td></tr>
+              <tr><td><code>timestamp</code></td><td><code>datetime</code></td><td>UTC datetime of execution.</td></tr>
+              <tr><td><code>error</code></td><td><code>str | None</code></td><td>Exception message if function raised.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Computed Properties</h3>
+        <ul class="list-disc list-inside text-gray-700 space-y-1 ml-2">
+          <li><code class="bg-gray-100 px-1 rounded">is_scored</code> — <code>True</code> if feedback is not None.</li>
+          <li><code class="bg-gray-100 px-1 rounded">passed</code> — <code>True</code> if label in {PASS, CORRECT, PROCEED} or score &ge; 0.5. <code>False</code> if otherwise scored. <code>None</code> if unscored.</li>
+        </ul>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="model-config" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Data Model — PromptConfig</h2>
+
+        <p class="mb-4 text-gray-700">Snapshot of configuration at the time a run was recorded. Stored as JSON in the database.</p>
+
+        <div class="overflow-x-auto">
+          <table class="param-table w-full bg-white rounded-lg border border-gray-200">
+            <thead class="bg-gray-50">
+              <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>name</code></td><td><code>str</code></td><td>Function/task name.</td></tr>
+              <tr><td><code>project</code></td><td><code>str</code></td><td>Project name.</td></tr>
+              <tr><td><code>model</code></td><td><code>str | None</code></td><td>LLM model identifier.</td></tr>
+              <tr><td><code>temperature</code></td><td><code>float | None</code></td><td>Sampling temperature.</td></tr>
+              <tr><td><code>max_tokens</code></td><td><code>int | None</code></td><td>Max tokens.</td></tr>
+              <tr><td><code>top_p</code></td><td><code>float | None</code></td><td>Nucleus sampling.</td></tr>
+              <tr><td><code>top_k</code></td><td><code>int | None</code></td><td>Top-k sampling.</td></tr>
+              <tr><td><code>system_prompt</code></td><td><code>str | None</code></td><td>System prompt text.</td></tr>
+              <tr><td><code>prompt_template</code></td><td><code>str | None</code></td><td>Raw template before substitution.</td></tr>
+              <tr><td><code>version</code></td><td><code>str | None</code></td><td>Auto-generated MD5 hash (8 chars) of <code>prompt_template</code>.</td></tr>
+              <tr><td><code>tags</code></td><td><code>dict</code></td><td>Arbitrary metadata (default: <code>{}</code>).</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="model-feedback" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Data Model — FeedbackResult</h2>
+
+        <p class="mb-4 text-gray-700">Human feedback attached to a run after review.</p>
+
+        <div class="overflow-x-auto">
+          <table class="param-table w-full bg-white rounded-lg border border-gray-200">
+            <thead class="bg-gray-50">
+              <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>score</code></td><td><code>float | None</code></td><td>Numeric quality score (0.0–1.0).</td></tr>
+              <tr><td><code>label</code></td><td><code>str | None</code></td><td>Categorical label (e.g., "PASS", "FAIL", "PARTIAL").</td></tr>
+              <tr><td><code>notes</code></td><td><code>str | None</code></td><td>Free-text comments.</td></tr>
+              <tr><td><code>feedback_given_at</code></td><td><code>datetime | None</code></td><td>When feedback was recorded.</td></tr>
+              <tr><td><code>feedback_by</code></td><td><code>str</code></td><td>Always <code>"human"</code> in v0.1.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- CONFIGURATION -->
+      <!-- ================================================================== -->
+
+      <section class="mb-16">
+        <h2 id="storage-paths" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Storage Paths</h2>
+
+        <p class="mb-4 text-gray-700">
+          PromptLog stores data in SQLite databases. The database path is resolved in this order:
+        </p>
+
+        <ol class="list-decimal list-inside text-gray-700 space-y-2 ml-2">
+          <li><strong>Explicit path</strong> — If you pass <code class="bg-gray-100 px-1 rounded">storage_path</code> to <code>pl.init()</code>, that path is used directly.</li>
+          <li><strong>Local directory</strong> — If a <code class="bg-gray-100 px-1 rounded">.promptlog/</code> folder exists in the current working directory, the DB is stored at <code class="bg-gray-100 px-1 rounded">./.promptlog/{project}.db</code>.</li>
+          <li><strong>Global directory</strong> — Otherwise, falls back to <code class="bg-gray-100 px-1 rounded">~/.promptlog/{project}.db</code>.</li>
+        </ol>
+
+        <pre><code class="language-python"># Explicit path
+pl.init(project="my_bot", storage_path="/data/prompts/my_bot.db")
+
+# Local (create .promptlog/ in your project)
+# $ mkdir .promptlog
+pl.init(project="my_bot")  # → ./.promptlog/my_bot.db
+
+# Global fallback
+pl.init(project="my_bot")  # → ~/.promptlog/my_bot.db</code></pre>
+
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r mt-4 text-sm text-blue-800">
+          <strong>Tip:</strong> Create a <code>.promptlog/</code> directory in your project root to keep databases local and version-controllable.
+        </div>
+      </section>
+
+      <section class="mb-16">
+        <h2 id="database" class="section-anchor text-2xl font-bold mb-4 pb-2 border-b border-gray-200">Database</h2>
+
+        <p class="mb-4 text-gray-700">PromptLog uses SQLite with WAL (Write-Ahead Logging) mode for concurrent access.</p>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Schema</h3>
+        <pre><code class="language-bash">TABLE runs (
+    run_id         TEXT PRIMARY KEY,
+    session_id     TEXT,
+    parent_run_id  TEXT,
+    name           TEXT NOT NULL,
+    project        TEXT NOT NULL,
+    prompt         TEXT,
+    output         TEXT,
+    config_json    TEXT NOT NULL,    -- PromptConfig as JSON
+    latency_ms     REAL,
+    feedback_json  TEXT,             -- FeedbackResult as JSON
+    timestamp      TEXT NOT NULL,    -- ISO 8601 datetime
+    error          TEXT
+)</code></pre>
+
+        <h3 class="text-lg font-semibold mt-6 mb-3">Migrations</h3>
+        <p class="text-gray-700">
+          The database schema is auto-migrated on startup. If you're upgrading from an older version, PromptLog automatically
+          adds the <code class="bg-gray-100 px-1 rounded">session_id</code> and <code class="bg-gray-100 px-1 rounded">parent_run_id</code> columns
+          if they don't exist.
+        </p>
+      </section>
+
+      <!-- Footer -->
+      <footer class="mt-16 pt-8 border-t border-gray-200 text-center text-sm text-gray-400 pb-8">
+        <p>PromptLog v0.1.0 &bull; MIT License &bull; Python 3.11+</p>
+        <p class="mt-1">Built for LLM developers who want to track what matters.</p>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Sidebar toggle script -->
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('open');
+      sidebar.classList.toggle('hidden');
+    }
+
+    // Active link highlighting
+    const sections = document.querySelectorAll('.section-anchor');
+    const links = document.querySelectorAll('.sidebar-link');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          links.forEach(link => link.classList.remove('active'));
+          const activeLink = document.querySelector(`.sidebar-link[href="#${entry.target.id}"]`);
+          if (activeLink) activeLink.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-80px 0px -80% 0px' });
+
+    sections.forEach(section => observer.observe(section));
+
+    // Close sidebar on link click (mobile)
+    links.forEach(link => {
+      link.addEventListener('click', () => {
+        const sidebar = document.getElementById('sidebar');
+        if (window.innerWidth < 1024) {
+          sidebar.classList.add('hidden');
+          sidebar.classList.remove('open');
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
