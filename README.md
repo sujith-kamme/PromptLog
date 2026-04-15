@@ -88,15 +88,15 @@ promptlog serve --project my_app
 
 ## Web Dashboard
 
-![Runs View](assets/screenshot_runs.png)
+![Runs View](assets/1.png)
 
 Browse all runs with prompt preview, latency, model, and pass/fail status at a glance. Filter by version, model, or search across prompt/output text.
 
-![Stats View](assets/screenshot_stats.png)
+![Stats View](assets/2.png)
 
 Aggregated metrics per (task, version) group — pass rate with inline bar, color-coded avg score.
 
-![Run Detail](assets/screenshot_modal.png)
+![Run Detail](assets/3.png)
 
 Click any row to open the full run detail — prompt, output, model config, and an inline feedback form to score runs directly from the UI.
 
