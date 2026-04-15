@@ -106,7 +106,7 @@ Click any row to open the full run detail — prompt, output, model config, and 
 
 Full API reference, CLI reference, REST API docs, and integration examples are in the bundled docs:
 
-→ **[View Documentation](promptlog/ui/static/docs.html)**
+→ **[View Documentation](docs/docs.html)**
 
 Or serve locally and open in your browser:
 
