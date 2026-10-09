@@ -81,7 +81,7 @@ promptlog stats --project my_app
 Or launch the web dashboard:
 
 ```bash
-promptlog serve --project my_app
+promptlog serve
 ```
 
 ---
